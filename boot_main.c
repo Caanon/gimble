@@ -1,4 +1,5 @@
 #include <inttypes.h>
+#include <stdlib.h>
 #include <avr/io.h>
 
 /*
@@ -8,7 +9,8 @@
   #define F_CPU 16000000UL
 #endif
 
-#define	_BLINK_LOOP_COUNT_	(F_CPU / 2250)
+#define	BOOTLOADER_BLINK_LOOP_COUNT	(F_CPU / 2250)
+#define MAIN_BLINK_LOOP_COUNT BOOTLOADER_BLINK_LOOP_COUNT * 4
 
 #ifndef BAUDRATE
 	#define BAUDRATE 115200
@@ -63,5 +65,23 @@ void __jumpMain (void) {
   asm volatile ( "jmp main" );
 }
 
-void main() {
+int main() {
+  DDRA = 0b11111111;
+  PORTA = 0b0000000;
+  //DDRB = 0b11111111;
+  //PORTB = 0b00000000;
+
+  unsigned long boot_timer;
+
+  boot_timer = 0;
+
+  while (1) {
+    ++boot_timer;
+    if (boot_timer % BOOTLOADER_BLINK_LOOP_COUNT == 0 ) {
+      PORTA ^= 1 << PINA0;
+    }
+    //PORTB = 1 << PINB7;
+  }
+
+  return 0;
 }
