@@ -27,6 +27,17 @@
 	#define BOOTSIZE 2048
 #endif
 
+#define INPORT PINC
+#define WHITE PINC1
+#define BLACK PINC0
+
+#define LEDPORT PORTA
+
+#define LED0 PINA3
+#define LED1 PINA2
+#define LED2 PINA1
+#define LED3 PINA0
+
 #define APP_END  (FLASHEND -(2*BOOTSIZE) + 1)
 
 void (*application_entry_addr)(void) = 0x0000;
@@ -67,20 +78,32 @@ void __jumpMain (void) {
 
 int main() {
   DDRA = 0b11111111;
-  PORTA = 0b0000000;
-  //DDRB = 0b11111111;
-  //PORTB = 0b00000000;
+  DDRC = 0b00000000;
 
-  unsigned long boot_timer;
+  LEDPORT = 0b0000000;
 
-  boot_timer = 0;
+  PORTC = 0b11111111;
+
+  INPORT = 0b00000000;
+
+  unsigned long loop_ct = 0;
 
   while (1) {
-    ++boot_timer;
-    if (boot_timer % BOOTLOADER_BLINK_LOOP_COUNT == 0 ) {
-      PORTA ^= 1 << PINA0;
+    if ((1 << WHITE) & INPORT) {
+      LEDPORT |= 1 << LED0;
+    } else {
+      LEDPORT &= ~(1 << LED0);
     }
-    //PORTB = 1 << PINB7;
+    
+    if ((1 << BLACK) & INPORT) {
+      LEDPORT |= 1 << LED1;
+    } else {
+      LEDPORT &= ~(1 << LED1);
+    }
+    ++loop_ct;
+    if (loop_ct % BOOTLOADER_BLINK_LOOP_COUNT == 0) {
+      LEDPORT ^= 1 << LED3;
+    }
   }
 
   return 0;
