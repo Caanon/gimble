@@ -1,6 +1,7 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <avr/io.h>
+#include <avr/interrupt.h>
 
 /*
  * define CPU frequency in Mhz here if not defined in Makefile
@@ -76,6 +77,36 @@ void __jumpMain (void) {
   asm volatile ( "jmp main" );
 }
 
+ISR(INT0_vect)
+{
+  unsigned long loop_ct = 0;
+
+  while(1) {
+    ++loop_ct;
+    if (loop_ct % BOOTLOADER_BLINK_LOOP_COUNT == 0) {
+      LEDPORT ^= 1 << LED2;
+    }
+  }
+}
+
+ISR(BADISR_vect) {
+  unsigned long loop_ct = 0;
+
+  while(1) {
+    ++loop_ct;
+    if (loop_ct % BOOTLOADER_BLINK_LOOP_COUNT == 0) {
+      LEDPORT ^= 1 << LED1;
+    }
+  }
+}
+
+void SetMCUR() {
+  // Set IVCE to one so we can change IVSEL
+  MCUCR =  0x1;
+  // Set the IVSEL bit to make sure the interrupts in the bootloader are used
+  MCUCR = 0x2;
+}
+
 int main() {
   DDRA = 0b11111111;
   DDRC = 0b00000000;
@@ -85,6 +116,16 @@ int main() {
   PORTC = 0b11111111;
 
   INPORT = 0b00000000;
+
+  SetMCUR();
+
+  //set PD0/INT0 as input
+  DDRD |= 0 << PD0;
+  PORTD &= ~(1 << PD0);
+
+  EICRA = 0b00000000;
+  EIMSK = 0b00000001 ;
+  SREG |= 0b10000000;
 
   unsigned long loop_ct = 0;
 
