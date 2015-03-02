@@ -80,22 +80,33 @@ void __jumpMain (void) {
 ISR(INT0_vect)
 {
   unsigned long loop_ct = 0;
-
-  while(1) {
-    ++loop_ct;
-    if (loop_ct % BOOTLOADER_BLINK_LOOP_COUNT == 0) {
-      LEDPORT ^= 1 << LED2;
-    }
-  }
-}
-
-ISR(BADISR_vect) {
-  unsigned long loop_ct = 0;
+  unsigned char blink_count = 4 * 2;
 
   while(1) {
     ++loop_ct;
     if (loop_ct % BOOTLOADER_BLINK_LOOP_COUNT == 0) {
       LEDPORT ^= 1 << LED1;
+     --blink_count;
+    }
+    if (blink_count == 0) {
+      break;
+    }
+  }
+}
+
+ISR(INT1_vect)
+{
+  unsigned long loop_ct = 0;
+  unsigned char blink_count = 4 * 2;
+
+  while(1) {
+    ++loop_ct;
+    if (loop_ct % BOOTLOADER_BLINK_LOOP_COUNT == 0) {
+      LEDPORT ^= 1 << LED2;
+     --blink_count;
+    }
+    if (blink_count == 0) {
+      break;
     }
   }
 }
@@ -121,10 +132,10 @@ int main() {
 
   //set PD0/INT0 as input
   DDRD |= 0 << PD0;
-  PORTD &= ~(1 << PD0);
+  PORTD &= ~(1 << PD0 | 1 << PD1);
 
   EICRA = 0b00000000;
-  EIMSK = 0b00000001 ;
+  EIMSK = 0b00000011 ;
   SREG |= 0b10000000;
 
   unsigned long loop_ct = 0;
