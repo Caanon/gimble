@@ -3,6 +3,8 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+void SerialWrite(char c);
+
 /*
  * define CPU frequency in Mhz here if not defined in Makefile
  */
@@ -101,16 +103,26 @@ ISR(INT1_vect)
   unsigned long loop_ct = 0;
   unsigned char blink_count = 4 * 2;
 
+  SerialWrite('I');
+  SerialWrite('N');
+  SerialWrite('T');
+  SerialWrite(' ');
+  SerialWrite('1');
+  SerialWrite(':');
+
   while(1) {
     ++loop_ct;
     if (loop_ct % BOOTLOADER_BLINK_LOOP_COUNT == 0) {
       LEDPORT ^= 1 << LED2;
      --blink_count;
+     SerialWrite(56-blink_count);
     }
     if (blink_count == 0) {
       break;
     }
   }
+  SerialWrite('\r');
+  SerialWrite('\n');
 }
 
 void SetMCUR(void) {
