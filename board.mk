@@ -1,0 +1,8 @@
+MCU = atmega2560
+F_CPU = 16000000
+
+C_FLAGS += -D_MEGA_BOARD_
+
+C_FLAGS += -mmcu=$(MCU)
+
+AVR_TYPE = avr6
