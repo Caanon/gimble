@@ -2,7 +2,7 @@ include board.mk
 
 TARGET = main
 
-LIBDIRS = twi
+LIBDIRS = twi uart
 
 SRC_DIR = src
 BINARY_DIR = bin
@@ -17,6 +17,7 @@ C_FLAGS += -Os
 C_FLAGS += -g
 C_FLAGS += -std=gnu99
 C_FLAGS += -Wall
+C_FLAGS += -I. -I$(SRC_DIR)
 # Data types
 C_FLAGS += -funsigned-char
 C_FLAGS += -funsigned-bitfields
@@ -31,24 +32,28 @@ LD_FLAGS += -Wl,-Map,$(basename $@).map
 
 SOURCE_PATHS = $(wildcard *.c $(SRC_DIR)/*.c)
 SOURCE_PATHS += $(foreach dir, $(LIBDIRS),$(wildcard *.c $(SRC_DIR)/$(dir)/*.c))
+
+HEADERS = $(foreach dir, $(LIBDIRS),$(wildcard *.h $(SRC_DIR)/$(dir)/*.h))
+HEADER_PATHS = $(foreach path, $(HEADERS), $(dir $(path)))
+C_FLAGS += $(foreach dir, $(HEADER_PATHS), -I$(dir))
+
 SOURCES = $(subst $(SRC_DIR)/,,$(SOURCE_PATHS))
 OBJECTS = $(foreach source, $(SOURCES:.c=.o), $(BUILD_DIR)/$(source))
-HEADERS = $(SOURCES:.c=.h)
 
 ifneq ($(V),1)
 Q := @
 endif
 
-all: directories bootloader program
+all: directories bootloader main
 
 directories:
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p $(BINARY_DIR)
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	@printf " CC $^\n"
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(HEADERS)
+	@printf " CC $<\n"
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(AVR_GCC) $(C_FLAGS) -c $^ -o $@
+	$(Q)$(AVR_GCC) $(C_FLAGS) -c $< -o $@
 
 %.elf: $(OBJECTS)
 	@printf " LD $@\n"
@@ -67,7 +72,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@printf " LSS $@\n"
 	$(Q)$(AVR_OBJDUMP) -h -S $^ > $@
 
-program: $(OBJECTS) $(BINARY_DIR)/$(TARGET).hex $(BINARY_DIR)/$(TARGET).asm \
+main: $(OBJECTS) $(BINARY_DIR)/$(TARGET).hex $(BINARY_DIR)/$(TARGET).asm \
 	$(BINARY_DIR)/$(TARGET).lss
 
 bootloader:
@@ -78,9 +83,9 @@ pboot: bootloader
 	cd bootloader; \
 	sudo avrdude -c buspirate -P /dev/ttyUSB0 -p m2560 -U flash:w:boot_main.hex
 
-pprog: program
+p: main
 	cd bin; \
-	sudo avrdude -D -c buspirate -P /dev/ttyUSB0 -p m2560 -U flash:w:main.hex
+	sudo avrdude -c buspirate -P /dev/ttyUSB0 -p m2560 -U flash:w:main.hex
 
 dump:
 	@$(foreach V,$(sort $(.VARIABLES)), $(if $(filter-out environment% default automatic, $(origin $V)),$(warning $V=$($V) ($(value $V)))))
