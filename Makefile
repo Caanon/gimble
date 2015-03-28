@@ -17,6 +17,7 @@ C_FLAGS += -Os
 C_FLAGS += -g
 C_FLAGS += -std=gnu99
 C_FLAGS += -Wall
+C_FLAGS += -Werror
 C_FLAGS += -I. -I$(SRC_DIR)
 # Data types
 C_FLAGS += -funsigned-char

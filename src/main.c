@@ -7,8 +7,8 @@
 
 #define LEDPORT PORTA
 
-char message[] = "Hello world\r\n";
 const char message_progmem[] PROGMEM = "Hello progmem\r\n";
+const char echo_msg[] PROGMEM = "Echoing:";
 
 int main(void) {
   DDRA = 0b11111111;
@@ -25,14 +25,19 @@ int main(void) {
   BlockingWriteChar('!');
   BlockingWriteChar('\r');
   BlockingWriteChar('\n');
-
-  BlockingWriteString(message);
   BlockingWriteProgmemString(message_progmem);
   BlockingWriteChar('$');
   BlockingWriteChar('\r');
   BlockingWriteChar('\n');
 
-  while (1) {}
+  printf("This is a test: %i\r\n", 123);
+
+  while (1) {
+    char c = BlockingReadChar();
+    BlockingWriteProgmemString(echo_msg);
+    BlockingWriteChar(c);
+    BlockingWriteNL();
+  }
 
   return 0;
 }
