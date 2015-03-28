@@ -12,7 +12,6 @@ const char message_progmem[] PROGMEM = "Hello progmem\r\n";
 const char echo_msg[] PROGMEM = "Echoing:";
 
 #define GYRO_ADDR 0x6B
-
 #define WHOAMI 0x0F
 
 int main(void) {
@@ -80,14 +79,16 @@ int main(void) {
       printf("--Error SLA+R: %x\r\n", error_status);
     }
 
+    unsigned char data = 3;
+
     // See if we can get data...
     printf("RACK\r\n");
-    unsigned char data = 3;
-    error_status = ReadNackI2C(&data);
+    error_status = ReadAckI2C(&data);
     if (error_status) {
       printf("--Error RNACK: %x\r\n", error_status);
     } else {
       printf("Somehow managed to get data over I2C: %x (%i)\r\n", data, data);
+      printf("Does 0x6B == 0x%x?\r\n", data >> 1);
     }
 
     // Finally make stop condition.

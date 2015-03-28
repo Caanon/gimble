@@ -89,10 +89,9 @@ unsigned char WriteAddressI2C(const unsigned char address) {
 
 unsigned char WriteAckI2C(const unsigned char byte) {
   uint8_t twi_status;
+  TWDR = byte;
   // Clear the TWI bit, making sure enable was still set.
   TWCR = _BV(TWINT) | _BV(TWEN);
-
-  TWDR = byte;
 
   // Wait until the data byte is sent
   while (!(TWCR & (1 << TWINT))) {
@@ -110,10 +109,10 @@ unsigned char WriteAckI2C(const unsigned char byte) {
 
 unsigned char WriteNackI2C(const unsigned char byte) {
   uint8_t twi_status;
-  // Clear the TWI bit, making sure enable was still set.
-  TWCR = _BV(TWINT) | _BV(TWEN);
 
   TWDR = byte;
+  // Clear the TWI bit, making sure enable was still set.
+  TWCR = _BV(TWINT) | _BV(TWEN);
 
   // Wait until the data byte is sent
   while (!(TWCR & (1 << TWINT))) {
