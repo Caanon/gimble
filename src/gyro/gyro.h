@@ -42,4 +42,15 @@
 // Initialize the gyro. Assumes the I2C bus has been set up correctly.
 void Gyro_Init();
 
+// Dump the registers to the serial port. Assumes InitUart has been called.
+void Gyro_DumpRegisters();
+
+// Read the raw values from the gyro's sensors; no conversion is performed.
+// Note: does NOT control for saturation yet.
+void Gyro_ReadRaw(int *x, int *y, int *z);
+
+// Read degrees from the gyro's sensors.
+// Note: does NOT control for saturation yet.
+void Gyro_ReadDegrees(float *x, float *y, float *z);
+
 #endif  // __GYRO_GYRO_H__

@@ -12,24 +12,33 @@
 
 #define LEDPORT PORTA
 
-#define GYRO_ADDR 0x6B
-#define WHOAMI 0x0F
-
 void DisplayMenu() {
-  printf(PSTR("Menu:\n"));
-  printf(PSTR("1) Poll gyro\n"));
-  printf(PSTR("2) scan I2C bus\n"));
-  printf(PSTR("> "));
+  printf_P(PSTR("Main menu:\n"));
+  printf_P(PSTR("a) Dump gyro registers\n"));
+  printf_P(PSTR("b) Init Gyro\n"));
+  printf_P(PSTR("c) Scan I2C bus\n"));
+  printf_P(PSTR("d) Poll gyro until key is pressed\n"));
+  printf_P(PSTR("> "));
 }
 
 void ScanI2CBus() {
-  printf(PSTR("Scanning I2C bus...\n"));
+  printf_P(PSTR("Scanning I2C bus...\n"));
   unsigned char devices[16];
   unsigned char num_devices = 0;
   I2C_ScanBus(devices, &num_devices, 16);
   for (int i = 0; i < num_devices; ++i) {
-    printf(PSTR("  Found device at address 0x%X\n"), devices[i]);
+    printf_P(PSTR("  Found device at address 0x%X\n"), devices[i]);
   }
+}
+
+void PollGyro() {
+  int x, y, z;
+  while (!IsDataWaiting()) {
+    Gyro_Read(&x, &y, &z);
+    printf("%6i,%6i,%6i\n", x, y, z);
+  }
+  // Make sure we clear out that last keypress.
+  BlockingReadChar();
 }
 
 int main(void) {
@@ -38,21 +47,35 @@ int main(void) {
 
   LEDPORT |= 1 << LED2;
 
-  char command_buffer[16];
-
   InitUart();
 
+  printf(PSTR("\n\n     **RESTART**\n\n"));
   printf(PSTR("Initializing I2C...\n"));
   SetupI2C();
 
-  printf_P(PSTR("Initializing Gyro...\n"));
-  Gyro_Init();
-
   while (1) {
     DisplayMenu();
-    UartGetString(command_buffer, 16);
-    StreamPutChar('\n', NULL);
-    printf_P(PSTR("Echo cmd: %s\n"), command_buffer);
+    char cmd = BlockingReadChar();
+    BlockingWriteChar(cmd);
+    BlockingWriteChar('\r');
+    BlockingWriteChar('\n');
+    switch (cmd) {
+    case 'a':
+      Gyro_DumpRegisters();
+      break;
+    case 'b':
+      printf_P(PSTR("Initializing Gyro...\n"));
+      Gyro_Init();
+      break;
+    case 'c':
+      ScanI2CBus();
+      break;
+    case 'd':
+      PollGyro();
+      break;
+    default:
+      break;
+    }
   }
 
   return 0;

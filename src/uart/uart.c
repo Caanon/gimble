@@ -110,6 +110,10 @@ int StreamPutChar(char c, FILE *file) {
   return 0;
 }
 
+unsigned char IsDataWaiting() {
+  return UCSR0A & _BV(RXC0);
+}
+
 int StreamGetChar(FILE *file) { return BlockingReadChar(); }
 
 void UartGetString(char *buffer, unsigned int buffer_length) {

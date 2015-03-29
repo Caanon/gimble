@@ -5,20 +5,24 @@
 
 void InitUart(void);
 
+// Returns 1 if there is data waiting to be read on the uart, otherwise 0.
+// Useful for fast key press detection.
+unsigned char IsDataWaiting();
+
 char BlockingReadChar();
 void BlockingWriteChar(char c);
 void BlockingWriteNL();
-void BlockingWriteString(const char* c);
-void BlockingWriteProgmemString(const char* c);
+void BlockingWriteString(const char *c);
+void BlockingWriteProgmemString(const char *c);
 
 // Functions that support printf.
-int StreamPutChar(char c, FILE* file);
-int StreamGetChar(FILE* file);
+int StreamPutChar(char c, FILE *file);
+int StreamGetChar(FILE *file);
 
 // String input.
-void UartGetString(char* buffer, unsigned int buffer_length);
+void UartGetString(char *buffer, unsigned int buffer_length);
 
 // Auto-add a carriage return during printf statements. Very useful.
 #define UART_ADD_CARRIAGE_RETURN
 
-#endif  // __UART_UART_H__
+#endif // __UART_UART_H__

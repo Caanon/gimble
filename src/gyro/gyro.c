@@ -30,8 +30,6 @@ void Write8(const unsigned char register_address, const unsigned char data) {
 #define GYRO_DUMP_REGISTER(name) printf("%s:\t0x%02X\n", #name, Read8(name));
 void Gyro_DumpRegisters() {
   GYRO_DUMP_REGISTER(GYRO_WHO_AM_I);
-
-  GYRO_DUMP_REGISTER(GYRO_WHO_AM_I);
   GYRO_DUMP_REGISTER(GYRO_CTRL1);
   GYRO_DUMP_REGISTER(GYRO_CTRL2);
   GYRO_DUMP_REGISTER(GYRO_CTRL3);
@@ -81,14 +79,17 @@ void Gyro_Init() {
   }
 
   Write8(GYRO_CTRL1, 0x0F); // Powers up the chip.
-  Gyro_DumpRegisters();
 
   Gyro_SetDps(GYRO_250_DPS);
+}
 
-  //  while (1) {
-    int x = (Read8(GYRO_OUT_X_H) << 8) + Read8(GYRO_OUT_X_L);
-    int y = (Read8(GYRO_OUT_Y_H) << 8) + Read8(GYRO_OUT_Y_L);
-    int z = (Read8(GYRO_OUT_Z_H) << 8) + Read8(GYRO_OUT_Z_L);
-    printf("%5i,%5i,%5i\n", x, y, z);
-    //  }
+void Gyro_ReadRaw(int *x, int *y, int *z) {
+  *x = (Read8(GYRO_OUT_X_H) << 8) + Read8(GYRO_OUT_X_L);
+  *y = (Read8(GYRO_OUT_Y_H) << 8) + Read8(GYRO_OUT_Y_L);
+  *z = (Read8(GYRO_OUT_Z_H) << 8) + Read8(GYRO_OUT_Z_L);
+}
+
+void Gyro_ReadDegrees(float *x, float *y, float *z) {
+  int x, y, z;
+  Gyro_ReadRaw(&x, &y, &z);
 }
