@@ -15,6 +15,9 @@ void BlockingWriteProgmemString(const char* c);
 int StreamPutChar(char c, FILE* file);
 int StreamGetChar(FILE* file);
 
+// String input.
+void UartGetString(char* buffer, unsigned int buffer_length);
+
 // Auto-add a carriage return during printf statements. Very useful.
 #define UART_ADD_CARRIAGE_RETURN
 

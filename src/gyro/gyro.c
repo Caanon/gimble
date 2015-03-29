@@ -83,10 +83,12 @@ void Gyro_Init() {
   Write8(GYRO_CTRL1, 0x0F); // Powers up the chip.
   Gyro_DumpRegisters();
 
-  Gyro_SetDps(GYRO_2000_DPS);
+  Gyro_SetDps(GYRO_250_DPS);
 
-  while (1) {
-    int result = (Read8(GYRO_OUT_X_H) << 8) + Read8(GYRO_OUT_X_L);
-    printf("X: %i\n", result);
-  }
+  //  while (1) {
+    int x = (Read8(GYRO_OUT_X_H) << 8) + Read8(GYRO_OUT_X_L);
+    int y = (Read8(GYRO_OUT_Y_H) << 8) + Read8(GYRO_OUT_Y_L);
+    int z = (Read8(GYRO_OUT_Z_H) << 8) + Read8(GYRO_OUT_Z_L);
+    printf("%5i,%5i,%5i\n", x, y, z);
+    //  }
 }

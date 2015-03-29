@@ -12,7 +12,7 @@
 #include <util/setbaud.h>
 
 static FILE local_stdout =
-  FDEV_SETUP_STREAM(StreamPutChar, StreamGetChar, _FDEV_SETUP_RW);
+    FDEV_SETUP_STREAM(StreamPutChar, StreamGetChar, _FDEV_SETUP_RW);
 
 void InitUart(void) {
   // Set the Baud Rate. UBRRH_VALUE is pulled in from util/setbaud.h.
@@ -99,17 +99,34 @@ void BlockingWriteProgmemString(const char *c) {
   } while (output != 0);
 }
 
-int StreamPutChar(char c, FILE* file) {
+int StreamPutChar(char c, FILE *file) {
 #ifdef UART_ADD_CARRIAGE_RETURN
   if (c == '\n') {
     BlockingWriteChar('\r');
   }
-#endif  // UART_ADD_CARRIAGE_RETURN
+#endif // UART_ADD_CARRIAGE_RETURN
 
   BlockingWriteChar(c);
   return 0;
 }
 
-int StreamGetChar(FILE* file) {
-  return BlockingReadChar();
+int StreamGetChar(FILE *file) { return BlockingReadChar(); }
+
+void UartGetString(char *buffer, unsigned int buffer_length) {
+  unsigned int num_read = 0;
+  for (unsigned int i = 0; i < buffer_length; ++i) {
+    buffer[i] = 0;
+  }
+  char data = 0;
+  // Check for length-1 so we can ensure we write a zero at the end.
+  while (num_read < buffer_length - 1) {
+     data = BlockingReadChar();
+     if (data == '\r') {
+       break;
+     }
+     buffer[num_read] = data;
+     StreamPutChar(data, NULL);
+     ++num_read;
+  }
+  buffer[num_read] = 0;
 }
