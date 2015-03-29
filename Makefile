@@ -82,11 +82,11 @@ bootloader:
 
 pboot: bootloader
 	cd bootloader; \
-	sudo avrdude -c buspirate -P /dev/ttyUSB0 -p m2560 -U flash:w:boot_main.hex
+	sudo avrdude -c buspirate -P /dev/ttyUSB0 -p m2560 -U flash:w:boot_main.hex -x spifreq=5
 
 p: main
 	cd bin; \
-	sudo avrdude -c buspirate -P /dev/ttyUSB0 -p m2560 -U flash:w:main.hex
+	sudo avrdude -c buspirate -P /dev/ttyUSB0 -p m2560 -U flash:w:main.hex -x spifreq=5
 
 dump:
 	@$(foreach V,$(sort $(.VARIABLES)), $(if $(filter-out environment% default automatic, $(origin $V)),$(warning $V=$($V) ($(value $V)))))
