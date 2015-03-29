@@ -100,6 +100,12 @@ void BlockingWriteProgmemString(const char *c) {
 }
 
 int StreamPutChar(char c, FILE* file) {
+#ifdef UART_ADD_CARRIAGE_RETURN
+  if (c == '\n') {
+    BlockingWriteChar('\r');
+  }
+#endif  // UART_ADD_CARRIAGE_RETURN
+
   BlockingWriteChar(c);
   return 0;
 }

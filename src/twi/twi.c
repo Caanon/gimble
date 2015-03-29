@@ -197,3 +197,20 @@ void StopI2C() {
   // Don't need to check that TWINT was set here, since stop conditions don't
   // set it.
 }
+
+void I2C_ScanBus(unsigned char *data, unsigned char *num_devices,
+                 const unsigned char limit) {
+  SetupI2C();
+  *num_devices = 0;
+  unsigned char address = 0;
+  while (*num_devices < limit && address < 127) {
+    StartI2C();
+    if (!WriteAddressI2C(address)) {
+      // Device acknowledged.
+      data[*num_devices] = address;
+      ++(*num_devices);
+    }
+    StopI2C();
+    ++address;
+  }
+}

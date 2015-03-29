@@ -1,15 +1,13 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 
+#include "gyro/gyro.h"
 #include "twi/twi.h"
 #include "uart/uart.h"
 
 #define LED2 PINA1
 
 #define LEDPORT PORTA
-
-const char message_progmem[] PROGMEM = "Hello progmem\r\n";
-const char echo_msg[] PROGMEM = "Echoing:";
 
 #define GYRO_ADDR 0x6B
 #define WHOAMI 0x0F
@@ -22,80 +20,79 @@ int main(void) {
 
   InitUart();
 
-  BlockingWriteChar('o');
-  BlockingWriteChar('h');
-  BlockingWriteChar('a');
-  BlockingWriteChar('i');
-  BlockingWriteChar('!');
-  BlockingWriteChar('\r');
-  BlockingWriteChar('\n');
-  BlockingWriteProgmemString(message_progmem);
-  BlockingWriteChar('$');
-  BlockingWriteChar('\r');
-  BlockingWriteChar('\n');
-
   SetupI2C();
+
+  printf("Scanning I2C bus...\n");
+  unsigned char devices[16];
+  unsigned char num_devices = 0;
+  I2C_ScanBus(devices, &num_devices, 16);
+  for (int i = 0; i < num_devices; ++i) {
+    printf("  Found device at address 0x%X\n", devices[i]);
+  }
+
+  printf("Initializing Gyro...\n");
+  Gyro_Init();
 
   unsigned char error_status = 0;
 
-  printf("Press key to run I2c...\r\n");
+  printf("Press key to run I2C...\n");
   while (1) {
     char c = BlockingReadChar();
-    printf("Running command: %c (ascii: %i)\r\n", c, c);
+    printf("Running command: %c (ascii: %i)\n", c, c);
     BlockingWriteNL();
 
     // Start off the I2C
-    printf("Start\r\n");
+    printf("Start\n");
     error_status = StartI2C();
     if (error_status) {
-      printf("--Error Start: %x\r\n", error_status);
+      printf("--Error Start: %x\n", error_status);
     }
 
     // Write the address of the gyro.
-    printf("SLA+W\r\n");
+    printf("SLA+W\n");
     error_status = WriteAddressI2C(GYRO_ADDR);
     if (error_status) {
-      printf("--Error SLA+W: %x\r\n", error_status);
+      printf("--Error SLA+W: %x\n", error_status);
     }
 
     // Wrijte the sub-address that we're going to read from.
-    printf("SUB\r\n");
+    printf("SUB\n");
     error_status = WriteAckI2C(WHOAMI);
     if (error_status) {
-      printf("--Error WACK: %x\r\n", error_status);
+      printf("--Error WACK: %x\n", error_status);
     }
 
     // Start again, but this time in read mode.
-    printf("RStart\r\n");
+    printf("RStart\n");
     error_status = StartI2C();
     if (error_status) {
-      printf("--Error Repeated Start: %x\r\n", error_status);
+      printf("--Error Repeated Start: %x\n", error_status);
     }
 
     // Set SLA+W mode.
-    printf("SLA+R\r\n");
+    printf("SLA+R\n");
     error_status = ReadAddressI2C(GYRO_ADDR);
     if (error_status) {
-      printf("--Error SLA+R: %x\r\n", error_status);
+      printf("--Error SLA+R: %x\n", error_status);
     }
 
     unsigned char data = 3;
 
     // See if we can get data...
-    printf("RACK\r\n");
+    printf("RACK\n");
     error_status = ReadAckI2C(&data);
     if (error_status) {
-      printf("--Error RNACK: %x\r\n", error_status);
+      printf("--Error RNACK: %x\n", error_status);
     } else {
-      printf("Somehow managed to get data over I2C: %x (%i)\r\n", data, data);
-      printf("Does 0x6B == 0x%x?\r\n", data >> 1);
+      printf("Somehow managed to get data over I2C: %x (%i)\n", data, data);
+      printf("Does 0x6B == 0x%x?\n", data >> 1);
     }
 
     // Finally make stop condition.
-    printf("Stop\r\n");
+    printf("Stop\n");
     StopI2C();
 
-    printf("Press key to try again...\r\n");
+    printf("Press key to try again...\n");
   }
 
   return 0;

@@ -15,5 +15,7 @@ void BlockingWriteProgmemString(const char* c);
 int StreamPutChar(char c, FILE* file);
 int StreamGetChar(FILE* file);
 
+// Auto-add a carriage return during printf statements. Very useful.
+#define UART_ADD_CARRIAGE_RETURN
 
 #endif  // __UART_UART_H__

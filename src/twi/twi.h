@@ -26,4 +26,11 @@ unsigned char ReadNackI2C(unsigned char *byte);
 // Stop I2C communication in master mode.
 void StopI2C();
 
+// Scan the address range from 0-127, retrieving up to 'limi' values. Does so
+// by sending SLA+W to each address and listening for an ACK. If the request
+// fails, it stops sending and continues to the next address. If it succeeds, it
+// notes the address and continues.
+void I2C_ScanBus(unsigned char *data, unsigned char *num_devices,
+                 const unsigned char limit);
+
 #endif
