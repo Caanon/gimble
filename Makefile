@@ -11,6 +11,7 @@ BUILD_DIR = build
 AVR_GCC = avr-gcc
 OBJ_COPY = avr-objcopy
 AVR_OBJDUMP = avr-objdump
+AVR_SIZE = avr-size
 
 C_FLAGS += -DF_CPU=$(F_CPU)
 C_FLAGS += -Os
@@ -64,6 +65,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(HEADERS)
 %.hex: %.elf
 	@printf " HEX $@\n"
 	$(Q)$(OBJ_COPY) -O ihex $^ $@
+	$(Q)$(AVR_SIZE) -B --mcu=$(MCU) $@
 
 %.asm: %.hex
 	@printf " ASM $@\n"
