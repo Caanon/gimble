@@ -38,7 +38,6 @@
 #define GYRO_500_DPS 1
 #define GYRO_2000_DPS 2
 
-
 // Initialize the gyro. Assumes the I2C bus has been set up correctly.
 void Gyro_Init();
 
@@ -53,4 +52,9 @@ void Gyro_ReadRaw(int *x, int *y, int *z);
 // Note: does NOT control for saturation yet.
 void Gyro_ReadDegrees(float *x, float *y, float *z);
 
-#endif  // __GYRO_GYRO_H__
+// Low-level functions to read and write gyro registers.
+unsigned char Gyro_ReadRegister(const unsigned char register_address);
+void Gyro_WriteRegister(const unsigned char register_address,
+                        const unsigned char value);
+
+#endif // __GYRO_GYRO_H__

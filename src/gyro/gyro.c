@@ -90,6 +90,15 @@ void Gyro_ReadRaw(int *x, int *y, int *z) {
 }
 
 void Gyro_ReadDegrees(float *x, float *y, float *z) {
-  int x, y, z;
-  Gyro_ReadRaw(&x, &y, &z);
+  int raw_x, raw_y, raw_z;
+  Gyro_ReadRaw(&raw_x, &raw_y, &raw_z);
+}
+
+unsigned char Gyro_ReadRegister(const unsigned char register_address) {
+  return Read8(register_address);
+}
+
+void Gyro_WriteRegister(const unsigned char register_address,
+                        const unsigned char value) {
+  Write8(register_address, value);
 }

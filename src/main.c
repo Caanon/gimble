@@ -18,6 +18,7 @@ void DisplayMenu() {
   printf_P(PSTR("b) Init Gyro\n"));
   printf_P(PSTR("c) Scan I2C bus\n"));
   printf_P(PSTR("d) Poll gyro until key is pressed\n"));
+  printf_P(PSTR("e) Set gyro register\n"));
   printf_P(PSTR("> "));
 }
 
@@ -34,11 +35,98 @@ void ScanI2CBus() {
 void PollGyro() {
   int x, y, z;
   while (!IsDataWaiting()) {
-    Gyro_Read(&x, &y, &z);
+    Gyro_ReadRaw(&x, &y, &z);
     printf("%6i,%6i,%6i\n", x, y, z);
   }
   // Make sure we clear out that last keypress.
   BlockingReadChar();
+}
+
+void ByteToBitString(const unsigned char byte, char *bit_buffer,
+                     unsigned char length) {
+  unsigned char num_read = 0;
+  for (int i = 0; i < length; ++i) {
+    bit_buffer[i] = 0;
+  }
+  // Need - 1 so we write a 0 at the end.
+  while (num_read < length - 1 && num_read < 8) {
+    bit_buffer[num_read] = (byte & (1 << (7 - num_read))) ? '1' : '0';
+    ++num_read;
+  }
+  bit_buffer[num_read] = 0;
+}
+
+unsigned char BitStringToByte(const char *bit_buffer, unsigned char length) {
+  unsigned char num_read = 0;
+  unsigned char value = 0;
+
+  while (num_read < length && num_read < 8 && bit_buffer[num_read] != 0) {
+    value = (value << 1) | (bit_buffer[num_read] == '1' ? 1 : 0);
+    ++num_read;
+  }
+  return value;
+}
+
+void SetGyroRegister() {
+  while (1) {
+    printf_P(PSTR("Gyro Registers:\n"));
+    printf_P(PSTR("1) CTRL1:\n"));
+    printf_P(PSTR("2) CTRL2:\n"));
+    printf_P(PSTR("3) CTRL3:\n"));
+    printf_P(PSTR("4) CTRL4:\n"));
+    printf_P(PSTR("5) CTRL5:\n"));
+    printf_P(PSTR("> "));
+
+    char cmd = BlockingReadChar();
+    if (cmd == 27) { // Escape
+      return;
+    }
+    BlockingWriteChar(cmd);
+    BlockingWriteChar('\r');
+    BlockingWriteChar('\n');
+
+    unsigned char reg;
+
+    switch (cmd) {
+    case '1':
+      reg = GYRO_CTRL1;
+      printf_P(PSTR("--CTRL1--\n"));
+      break;
+    case '2':
+      reg = GYRO_CTRL2;
+      printf_P(PSTR("--CTRL2--\n"));
+      break;
+    case '3':
+      reg = GYRO_CTRL3;
+      printf_P(PSTR("--CTRL3--\n"));
+      break;
+    case '4':
+      reg = GYRO_CTRL4;
+      printf_P(PSTR("--CTRL4--\n"));
+      break;
+    case '5':
+      reg = GYRO_CTRL5;
+      printf_P(PSTR("--CTRL5--\n"));
+      break;
+    default:
+      return;
+    }
+
+    char bits[9];
+    unsigned char byte = Gyro_ReadRegister(reg);
+    ByteToBitString(byte, bits, 9);
+    printf_P(PSTR("Old Value: %s (0x%02X)\n"), bits, byte);
+    printf_P(PSTR("Enter new value: "));
+    if (UartGetString(bits, 9)) {
+      printf_P(PSTR("\n"));
+      continue;
+    }
+    printf_P(PSTR("\n"));
+    byte = BitStringToByte(bits, 9);
+    printf_P(PSTR("Setting new value to %s (0x%02X)\n"), bits, byte);
+
+    Gyro_WriteRegister(reg, byte);
+  }
 }
 
 int main(void) {
@@ -72,6 +160,9 @@ int main(void) {
       break;
     case 'd':
       PollGyro();
+      break;
+    case 'e':
+      SetGyroRegister();
       break;
     default:
       break;

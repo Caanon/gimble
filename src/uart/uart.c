@@ -110,13 +110,11 @@ int StreamPutChar(char c, FILE *file) {
   return 0;
 }
 
-unsigned char IsDataWaiting() {
-  return UCSR0A & _BV(RXC0);
-}
+unsigned char IsDataWaiting() { return UCSR0A & _BV(RXC0); }
 
 int StreamGetChar(FILE *file) { return BlockingReadChar(); }
 
-void UartGetString(char *buffer, unsigned int buffer_length) {
+unsigned char UartGetString(char *buffer, unsigned int buffer_length) {
   unsigned int num_read = 0;
   for (unsigned int i = 0; i < buffer_length; ++i) {
     buffer[i] = 0;
@@ -124,13 +122,28 @@ void UartGetString(char *buffer, unsigned int buffer_length) {
   char data = 0;
   // Check for length-1 so we can ensure we write a zero at the end.
   while (num_read < buffer_length - 1) {
-     data = BlockingReadChar();
-     if (data == '\r') {
-       break;
-     }
-     buffer[num_read] = data;
-     StreamPutChar(data, NULL);
-     ++num_read;
+    data = BlockingReadChar();
+    if (data == 27) {
+      return 1;
+    }
+    if (data == '\r') {
+      break;
+    }
+    if (data == 8) { // backspace
+      // Backup, write over the previous char, back up again.
+      BlockingWriteChar(8);
+      BlockingWriteChar(' ');
+      BlockingWriteChar(8);
+      if (num_read > 0) {
+        buffer[num_read - 1] = 0;
+      }
+      --num_read;
+      continue;
+    }
+    buffer[num_read] = data;
+    StreamPutChar(data, NULL);
+    ++num_read;
   }
   buffer[num_read] = 0;
+  return 0;
 }
