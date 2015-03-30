@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <avr/io.h>
 #include <avr/pgmspace.h>
@@ -19,6 +20,7 @@ void DisplayMenu() {
   printf_P(PSTR("c) Scan I2C bus\n"));
   printf_P(PSTR("d) Poll gyro until key is pressed\n"));
   printf_P(PSTR("e) Set gyro register\n"));
+  printf_P(PSTR("f) Calibrate gyro\n"));
   printf_P(PSTR("> "));
 }
 
@@ -129,6 +131,49 @@ void SetGyroRegister() {
   }
 }
 
+#define NUM_CALIBRATION_LOOPS 1
+
+void CalibrateGyro() {
+  int *buffer = malloc(sizeof(int) * 500);
+  const char spin[] = "/-\\|";
+  unsigned char spin_count = 0;
+  long long int cumulative;
+  int vars[3];
+  const char labels[] = "XYZ";
+
+  for (int dim = 0; dim < 3; ++dim) {
+    float average = 0;
+    printf_P(PSTR("Calibrating %c...  "), labels[dim]);
+    for (int average_count = 0; average_count < NUM_CALIBRATION_LOOPS;
+         ++average_count) {
+      cumulative = 0;
+      for (int i = 0; i < 500; ++i) {
+        Gyro_ReadNewRaw(&vars[0], &vars[1], &vars[2]);
+        buffer[i] = vars[dim];
+        cumulative += vars[dim];
+        if (i % 100 == 0) {
+          BlockingWriteChar(8);
+          BlockingWriteChar(spin[spin_count]);
+          ++spin_count;
+          if (spin_count > 3) {
+            spin_count = 0;
+          }
+        }
+      }
+      average += cumulative / 500.0f;
+    }
+    average /= NUM_CALIBRATION_LOOPS;
+    BlockingWriteChar(8);
+    printf_P(PSTR("Done. mean: %f "), average);
+    float varience = 0;
+    for (int i = 0; i < 500; ++i) {
+      varience += (buffer[i] - average) * (buffer[i] - average);
+    }
+    printf_P(PSTR(" std: %f\n"), sqrt(varience / 500));
+  }
+  free(buffer);
+}
+
 int main(void) {
   DDRA = 0b11111111;
   LEDPORT = 0b00000000;
@@ -163,6 +208,9 @@ int main(void) {
       break;
     case 'e':
       SetGyroRegister();
+      break;
+    case 'f':
+      CalibrateGyro();
       break;
     default:
       break;

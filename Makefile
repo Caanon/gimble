@@ -29,6 +29,10 @@ C_FLAGS += -fshort-enums
 C_FLAGS += -Wa,-adhlns=$(@:.o=.lst)
 
 LD_FLAGS += -Wl,-Map,$(basename $@).map 
+LD_FLAGS += -Wl,-u,vfprintf
+
+LIBS += -lprintf_flt
+LIBS += -lm
 
 # Rules
 
@@ -59,7 +63,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(HEADERS)
 
 %.elf: $(OBJECTS)
 	@printf " LD $@\n"
-	$(Q)$(AVR_GCC) $(C_FLAGS) $(LD_FLAGS) $^ -o $@
+	$(Q)$(AVR_GCC) $(C_FLAGS) $(LD_FLAGS) $(LIBS) $^ -o $@
 
 .SECONDARY:
 %.hex: %.elf

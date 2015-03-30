@@ -44,13 +44,22 @@ void Gyro_Init();
 // Dump the registers to the serial port. Assumes InitUart has been called.
 void Gyro_DumpRegisters();
 
+// Read the STATUS register to see if there's any new data available. Returns >
+// 0 if new data is available, otherwise returns 0.
+unsigned char Gyro_HasNewData();
+
 // Read the raw values from the gyro's sensors; no conversion is performed.
 // Note: does NOT control for saturation yet.
 void Gyro_ReadRaw(int *x, int *y, int *z);
+// Same as above, but blocks until the STATUS register indicates there's new
+// data.
+void Gyro_ReadNewRaw(int *x, int *y, int *z);
 
 // Read degrees from the gyro's sensors.
 // Note: does NOT control for saturation yet.
 void Gyro_ReadDegrees(float *x, float *y, float *z);
+
+// Check to see whether we're ready to read again.
 
 // Low-level functions to read and write gyro registers.
 unsigned char Gyro_ReadRegister(const unsigned char register_address);

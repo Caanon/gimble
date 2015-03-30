@@ -79,6 +79,10 @@ void Gyro_Init() {
   }
 
   Write8(GYRO_CTRL1, 0x0F); // Powers up the chip.
+  Write8(GYRO_CTRL2, 0x00); // Defaults.
+  Write8(GYRO_CTRL3, 0x00); // Defaults.
+  Write8(GYRO_CTRL4, 0x00); // Defaults.
+  Write8(GYRO_CTRL5, 0x00); // Defaults.
 
   Gyro_SetDps(GYRO_250_DPS);
 }
@@ -101,4 +105,13 @@ unsigned char Gyro_ReadRegister(const unsigned char register_address) {
 void Gyro_WriteRegister(const unsigned char register_address,
                         const unsigned char value) {
   Write8(register_address, value);
+}
+
+unsigned char Gyro_HasNewData() {
+  return Gyro_ReadRegister(GYRO_STATUS) & 0x4;
+}
+
+void Gyro_ReadNewRaw(int *x, int *y, int *z) {
+  while (!Gyro_HasNewData()) {}
+  Gyro_ReadRaw(x, y, z);
 }
