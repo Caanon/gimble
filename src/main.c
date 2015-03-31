@@ -5,9 +5,11 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 
+#include "accel/accel.h"
 #include "gyro/gyro.h"
 #include "twi/twi.h"
 #include "uart/uart.h"
+
 
 #define LED2 PINA1
 
@@ -16,9 +18,9 @@
 void DisplayMenu() {
   printf_P(PSTR("Main menu:\n"));
   printf_P(PSTR("a) Dump gyro registers\n"));
-  printf_P(PSTR("b) Init Gyro\n"));
+  printf_P(PSTR("b) Init\n"));
   printf_P(PSTR("c) Scan I2C bus\n"));
-  printf_P(PSTR("d) Poll gyro until key is pressed\n"));
+  printf_P(PSTR("d) Poll until key is pressed\n"));
   printf_P(PSTR("e) Set gyro register\n"));
   printf_P(PSTR("f) Calibrate gyro\n"));
   printf_P(PSTR("> "));
@@ -38,10 +40,48 @@ void PollGyro() {
   int x, y, z;
   while (!IsDataWaiting()) {
     Gyro_ReadRaw(&x, &y, &z);
-    printf("%6i,%6i,%6i\n", x, y, z);
+    printf("G: %6i,%6i,%6i\n", x, y, z);
   }
   // Make sure we clear out that last keypress.
   BlockingReadChar();
+}
+
+void PollAccel() {
+  int x, y, z;
+  while (!IsDataWaiting()) {
+    Accel_ReadRaw(&x, &y, &z);
+    printf("A: %6i,%6i,%6i\n", x, y, z);
+  }
+  // Make sure we clear out that last keypress.
+  BlockingReadChar();
+}
+
+void PollMenu() {
+  while (1) {
+    printf_P(PSTR("Poll:\n"));
+    printf_P(PSTR("g) Gyro\n"));
+    printf_P(PSTR("a) Accel:\n"));
+    printf_P(PSTR("> "));
+
+    char cmd = BlockingReadChar();
+    if (cmd == 27) { // Escape
+      return;
+    }
+    BlockingWriteChar(cmd);
+    BlockingWriteChar('\r');
+    BlockingWriteChar('\n');
+
+    switch (cmd) {
+    case 'g':
+      PollGyro();
+      return;
+    case 'a':
+      PollAccel();
+      return;
+    default:
+      continue;
+    }
+  }
 }
 
 void ByteToBitString(const unsigned char byte, char *bit_buffer,
@@ -199,12 +239,14 @@ int main(void) {
     case 'b':
       printf_P(PSTR("Initializing Gyro...\n"));
       Gyro_Init();
+      printf_P(PSTR("Initializing Accelerometer...\n"));
+      Accel_Init();
       break;
     case 'c':
       ScanI2CBus();
       break;
     case 'd':
-      PollGyro();
+      PollMenu();
       break;
     case 'e':
       SetGyroRegister();

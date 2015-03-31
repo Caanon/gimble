@@ -4,7 +4,7 @@
 // This is just for debugging purposes
 #include "uart/uart.h"
 
-unsigned char Read8(const unsigned char register_address) {
+unsigned char Gyro_Read8(const unsigned char register_address) {
   unsigned char data = 0;
 
   // Set the register, then read 1 byte.
@@ -18,7 +18,8 @@ unsigned char Read8(const unsigned char register_address) {
   return data;
 }
 
-void Write8(const unsigned char register_address, const unsigned char data) {
+void Gyro_Write8(const unsigned char register_address,
+                 const unsigned char data) {
   // Set the register, then write one byte.
   StartI2C();
   WriteAddressI2C(GYRO_ADDRESS);
@@ -27,7 +28,8 @@ void Write8(const unsigned char register_address, const unsigned char data) {
   StopI2C();
 }
 
-#define GYRO_DUMP_REGISTER(name) printf("%s:\t0x%02X\n", #name, Read8(name));
+#define GYRO_DUMP_REGISTER(name)                                               \
+  printf("%s:\t0x%02X\n", #name, Gyro_Read8(name));
 void Gyro_DumpRegisters() {
   GYRO_DUMP_REGISTER(GYRO_WHO_AM_I);
   GYRO_DUMP_REGISTER(GYRO_CTRL1);
@@ -64,33 +66,33 @@ void Gyro_SetDps(const unsigned char dps) {
     return;
   }
   // DPS bits are bits 4 & 5 of CTRL4;
-  register_value = Read8(GYRO_CTRL4);
+  register_value = Gyro_Read8(GYRO_CTRL4);
   register_value = (register_value & ~(3 << 4)) | (dps << 4);
-  Write8(GYRO_CTRL4, register_value);
+  Gyro_Write8(GYRO_CTRL4, register_value);
 }
 
 void Gyro_Init() {
   unsigned char data;
-  data = Read8(GYRO_WHO_AM_I);
+  data = Gyro_Read8(GYRO_WHO_AM_I);
   if (data >> 1 != 0x6B) {
     printf("Unexpected device: 0x%X (%i)\n", data, data);
   } else {
     printf("Found gyro.\n");
   }
 
-  Write8(GYRO_CTRL1, 0x0F); // Powers up the chip.
-  Write8(GYRO_CTRL2, 0x00); // Defaults.
-  Write8(GYRO_CTRL3, 0x00); // Defaults.
-  Write8(GYRO_CTRL4, 0x00); // Defaults.
-  Write8(GYRO_CTRL5, 0x00); // Defaults.
+  Gyro_Write8(GYRO_CTRL1, 0x0F); // Powers up the chip.
+  Gyro_Write8(GYRO_CTRL2, 0x00); // Defaults.
+  Gyro_Write8(GYRO_CTRL3, 0x00); // Defaults.
+  Gyro_Write8(GYRO_CTRL4, 0x00); // Defaults.
+  Gyro_Write8(GYRO_CTRL5, 0x00); // Defaults.
 
   Gyro_SetDps(GYRO_250_DPS);
 }
 
 void Gyro_ReadRaw(int *x, int *y, int *z) {
-  *x = (Read8(GYRO_OUT_X_H) << 8) + Read8(GYRO_OUT_X_L);
-  *y = (Read8(GYRO_OUT_Y_H) << 8) + Read8(GYRO_OUT_Y_L);
-  *z = (Read8(GYRO_OUT_Z_H) << 8) + Read8(GYRO_OUT_Z_L);
+  *x = (Gyro_Read8(GYRO_OUT_X_H) << 8) + Gyro_Read8(GYRO_OUT_X_L);
+  *y = (Gyro_Read8(GYRO_OUT_Y_H) << 8) + Gyro_Read8(GYRO_OUT_Y_L);
+  *z = (Gyro_Read8(GYRO_OUT_Z_H) << 8) + Gyro_Read8(GYRO_OUT_Z_L);
 }
 
 void Gyro_ReadDegrees(float *x, float *y, float *z) {
@@ -99,19 +101,18 @@ void Gyro_ReadDegrees(float *x, float *y, float *z) {
 }
 
 unsigned char Gyro_ReadRegister(const unsigned char register_address) {
-  return Read8(register_address);
+  return Gyro_Read8(register_address);
 }
 
 void Gyro_WriteRegister(const unsigned char register_address,
                         const unsigned char value) {
-  Write8(register_address, value);
+  Gyro_Write8(register_address, value);
 }
 
-unsigned char Gyro_HasNewData() {
-  return Gyro_ReadRegister(GYRO_STATUS) & 0x4;
-}
+unsigned char Gyro_HasNewData() { return Gyro_ReadRegister(GYRO_STATUS) & 0x4; }
 
 void Gyro_ReadNewRaw(int *x, int *y, int *z) {
-  while (!Gyro_HasNewData()) {}
+  while (!Gyro_HasNewData()) {
+  }
   Gyro_ReadRaw(x, y, z);
 }

@@ -2,7 +2,7 @@ include board.mk
 
 TARGET = main
 
-LIBDIRS = twi uart gyro
+LIBDIRS = twi uart gyro accel
 
 SRC_DIR = src
 BINARY_DIR = bin
